@@ -1,0 +1,39 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>com.rodrigo.gestaovendas</groupId>
+  <artifactId>gestao-vendas</artifactId>
+  <version>0.0.1-SNAPSHOT</version>
+  <name>Gestão de Vendas</name>
+  <description>Sistema para gestão de vendas em Java Swing</description>
+  
+  <properties>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+  </properties>
+  
+  <dependencies>
+    <!-- Driver PostgreSQL - Base de Dados -->
+    <dependency>
+        <groupId>org.postgresql</groupId>
+        <artifactId>postgresql</artifactId>
+        <version>42.3.1</version>
+    </dependency>
+
+    <!-- Lombok - Produtividade -->
+    <dependency>
+        <groupId>org.projectlombok</groupId>
+        <artifactId>lombok</artifactId>
+        <scope>provided</scope>
+        <version>1.18.36</version>
+    </dependency>
+
+    <!-- JUnit - Testes Unitarios -->
+    <dependency>
+        <groupId>org.junit.jupiter</groupId>
+        <artifactId>junit-jupiter-api</artifactId>
+        <scope>test</scope>
+        <version>5.12.1</version>
+    </dependency>
+</dependencies>
+
+  
+</project>
