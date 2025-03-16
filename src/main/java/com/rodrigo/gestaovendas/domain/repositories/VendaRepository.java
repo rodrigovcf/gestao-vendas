@@ -3,9 +3,11 @@ package com.rodrigo.gestaovendas.domain.repositories;
 import java.util.List;
 import com.rodrigo.gestaovendas.domain.models.*;
 
-interface VendaRepository {
+public interface VendaRepository {
    
-	void salvar(Venda venda);
-    Venda buscarPorCodigo(int codigo);
+	void incluir(Venda venda);
+    Venda consultar(int codigo);
     List<Venda> listarTodos();
+    boolean excluir(int codigo);
+    Venda alterar(Venda venda);
 }

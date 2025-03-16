@@ -4,10 +4,12 @@ import java.util.List;
 
 import com.rodrigo.gestaovendas.domain.models.Cliente;
 
-interface ClienteRepository {
+public interface ClienteRepository {
     
-	void salvar(Cliente cliente);
-    Cliente buscarPorCodigo(int codigo);
+	Cliente incluir(Cliente cliente);
+    Cliente consultar(int codigo);
     List<Cliente> listarTodos();
-    void excluir(int codigo);
+    boolean excluir(int codigo);
+    Cliente alterar(Cliente cliente);
+ 
 }

@@ -4,10 +4,11 @@ import java.util.List;
 
 import com.rodrigo.gestaovendas.domain.models.Produto;
 
-interface ProdutoRepository {
+public interface ProdutoRepository {
     
-	void salvar(Produto produto);
-    Produto buscarPorCodigo(int codigo);
+	Produto incluir(Produto produto);
+    Produto consultar(int codigo);
     List<Produto> listarTodos();
-    void excluir(int codigo);
+    boolean excluir(int codigo);
+    Produto alterar(Produto produto);
 }
