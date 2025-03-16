@@ -226,6 +226,18 @@ public class VendaDAO implements VendaRepository {
 
         return itens;
     }
+
+	@Override
+	public List<Venda> buscarPorCliente(int clienteId) {
+		// Melhorias
+		return null;
+	}
+
+	@Override
+	public List<Venda> buscarPorPeriodo(java.util.Date inicio, java.util.Date fim) {
+		// Melhorias
+		return null;
+	}
 }
 
 
