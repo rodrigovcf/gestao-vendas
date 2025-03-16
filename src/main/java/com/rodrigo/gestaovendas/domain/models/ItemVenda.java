@@ -7,7 +7,15 @@ import lombok.*;
 @ToString
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 public class ItemVenda {
-    private Produto produto;
-    private int quantidade;
+    
+    private Produto produto;   
+    private int quantidade;    
+    private double precoUnitario;
+    
+    public double getValorTotal() {
+        return precoUnitario * quantidade; 
+    }
 }
+

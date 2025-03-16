@@ -7,7 +7,9 @@ import lombok.*;
 @ToString
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder(toBuilder = true)
 public class Produto {
+	
     private int codigo;
     private String descricao;
     private double preco;
