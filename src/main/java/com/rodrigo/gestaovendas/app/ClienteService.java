@@ -1,5 +1,8 @@
 package com.rodrigo.gestaovendas.app;
 
+import java.time.LocalDate;
+import java.util.List;
+
 import com.rodrigo.gestaovendas.domain.models.Cliente;
 import com.rodrigo.gestaovendas.domain.repositories.ClienteRepository;
 
@@ -10,7 +13,7 @@ public class ClienteService {
         this.clienteRepository = clienteRepository;
     }
 
-    public void cadastrarCliente(String nome, double limiteCompra, int diaFechamentoFatura) {
+    public void cadastrarCliente(String nome, double limiteCompra, LocalDate diaFechamentoFatura) {
         if (limiteCompra < 0) {
             throw new IllegalArgumentException("O limite de crédito deve ser positivo.");
         }
@@ -34,6 +37,36 @@ public class ClienteService {
 //        }
         clienteRepository.excluir(id);
     }
+
+	public List<Cliente> buscarTodosClientes() {
+		return clienteRepository.listarTodos();
+	}
+
+	public List<Cliente> buscarPorNome(String termo) {
+		return clienteRepository.buscarNome(termo);
+	}
+
+	public void atualizarCliente(Cliente clienteEdicao) {
+	    if (clienteEdicao == null) {
+	        throw new IllegalArgumentException("O cliente a ser atualizado não pode ser nulo.");
+	    }
+
+	    if (clienteEdicao.getCodigo() == 0) {
+	        throw new IllegalArgumentException("O cliente deve ter um código válido para ser atualizado.");
+	    }
+
+	    if (clienteEdicao.getLimiteCompra() < 0) {
+	        throw new IllegalArgumentException("O limite de crédito deve ser positivo.");
+	    }
+
+	    try {
+	        // Delegar a atualização para o repositório
+	        clienteRepository.alterar(clienteEdicao);
+	    } catch (Exception e) {
+	        throw new RuntimeException("Erro ao atualizar o cliente: " + e.getMessage(), e);
+	    }
+	}
+
 }
 
 
