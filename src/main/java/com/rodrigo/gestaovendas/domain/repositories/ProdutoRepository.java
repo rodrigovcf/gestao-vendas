@@ -11,4 +11,6 @@ public interface ProdutoRepository {
     List<Produto> listarTodos();
     boolean excluir(int codigo);
     Produto alterar(Produto produto);
+    List<Produto> buscarDesc(String termo);
+	boolean estaVinculadoAVenda(int id);
 }

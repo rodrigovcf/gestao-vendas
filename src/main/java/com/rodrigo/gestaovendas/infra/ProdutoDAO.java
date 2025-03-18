@@ -1,5 +1,6 @@
 package com.rodrigo.gestaovendas.infra;
 
+import com.rodrigo.gestaovendas.domain.models.Cliente;
 import com.rodrigo.gestaovendas.domain.models.Produto;
 import com.rodrigo.gestaovendas.domain.repositories.ProdutoRepository;
 import com.rodrigo.gestaovendas.exceptions.DAOException;
@@ -68,7 +69,6 @@ public class ProdutoDAO implements ProdutoRepository{
 			try (ResultSet rs = stmt.executeQuery()) {
 				if (rs.next()) {
 					return Produto.builder()
-	                        .codigo(rs.getInt("codigo"))
 	                        .descricao(rs.getString("descricao"))
 	                        .preco(rs.getDouble("preco"))
 	                        .build();
@@ -117,6 +117,35 @@ public class ProdutoDAO implements ProdutoRepository{
 	    } catch (SQLException e) {
 	        throw new DAOException("Erro ao excluir o produto com código " + codigo, e);
 	    }
+	}
+
+	@Override
+	public boolean estaVinculadoAVenda(int id) {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	@Override
+	public List<Produto> buscarDesc(String termo) {
+		String sql = "SELECT * FROM produto WHERE descricao ILIKE ?";
+        try (Connection conexao = ConexaoBD.conectar();
+             PreparedStatement stmt = conexao.prepareStatement(sql)) {
+
+            stmt.setString(1, "%" + termo + "%");
+            try (ResultSet rs = stmt.executeQuery()) {
+                List<Produto> produtos = new ArrayList<>();
+                while (rs.next()) {
+                	produtos.add(Produto.builder()
+                            .codigo(rs.getInt("codigo"))
+                            .descricao(rs.getString("descricao"))
+                            .preco(rs.getDouble("preco"))
+                            .build());
+                }
+                return produtos;
+            }
+        } catch (SQLException e) {
+            throw new DAOException("Erro ao buscar produtos pela descricao nome", e);
+        }
 	}
 
 }
