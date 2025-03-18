@@ -44,11 +44,17 @@ public class ClienteForm extends JFrame {
         tableModel = new ClienteTableModel(clienteService.buscarTodosClientes());
         table = new JTable(tableModel);
         JScrollPane scrollPane = new JScrollPane(table);
+        table.setAutoCreateRowSorter(true); //Ordena tabela direto da interface
 
         JPanel panelBottom = new JPanel();
+        
         btnNovo = new JButton("Novo Cliente");
         btnEditar = new JButton("Alterar Cliente");
         btnExcluir = new JButton("Excluir");
+        
+        btnEditar.setEnabled(false); // Desabilita inicialmente
+        btnExcluir.setEnabled(false); // Desabilita inicialmente
+
         panelBottom.add(btnNovo);
         panelBottom.add(btnEditar);
         panelBottom.add(btnExcluir);
@@ -57,7 +63,7 @@ public class ClienteForm extends JFrame {
         add(scrollPane, BorderLayout.CENTER);
         add(panelBottom, BorderLayout.SOUTH);
 
-        // 🔍 Busca dinâmica ao digitar
+        // Busca dinâmica ao digitar
         searchField.getDocument().addDocumentListener(new DocumentListener() {
             @Override
             public void insertUpdate(DocumentEvent e) { filtrarClientes(); }
@@ -66,23 +72,17 @@ public class ClienteForm extends JFrame {
             @Override
             public void changedUpdate(DocumentEvent e) { filtrarClientes(); }
         });
+        
+        // Listener para habilitar/desabilitar botões
+        table.getSelectionModel().addListSelectionListener(e -> {
+            boolean selecionado = table.getSelectedRow() != -1;
+            btnEditar.setEnabled(selecionado);
+            btnExcluir.setEnabled(selecionado);
+        });
 
+        // Botões
         btnNovo.addActionListener(e -> new ClienteCadastroView(clienteService, null, this::atualizarTabela));
-
-
         btnEditar.addActionListener(e -> editarCliente());
-
-//        btnEditar.addActionListener(e -> {
-//            Integer idCliente = getClienteSelecionado();
-//            if (idCliente == null) return;
-//
-//            Cliente cliente = clienteService.buscarClientePorId(idCliente);
-//            new ClienteCadastroView(clienteService, cliente, this::atualizarTabela);
-//        });
-
-        
-        
-        // 🗑️ Evento para excluir cliente selecionado
         btnExcluir.addActionListener(e -> excluirCliente());
 
         setVisible(true);
@@ -94,15 +94,27 @@ public class ClienteForm extends JFrame {
         tableModel.atualizarDados(clientesFiltrados);
     }
 
-    private void excluirCliente() {
+    private Integer getClienteSelecionado() {
         int row = table.getSelectedRow();
         if (row == -1) {
             JOptionPane.showMessageDialog(this, "Selecione um cliente para excluir!");
-            return;
+            return null;
         }
-        int idCliente = (int) table.getValueAt(row, 0);
-        clienteService.excluirCliente(idCliente);
-        filtrarClientes();
+        return (Integer) table.getValueAt(row, 0); // Supondo que a coluna 0 seja o código do produto
+    }
+    
+    private void excluirCliente() {
+        Integer idCliente = getClienteSelecionado();
+        if (idCliente == null) return;
+
+        int confirm = JOptionPane.showConfirmDialog(this,
+                "Tem certeza que deseja excluir este cliente?",
+                "Confirmação", JOptionPane.YES_NO_OPTION);
+
+        if (confirm == JOptionPane.YES_OPTION) {
+            clienteService.excluirCliente(idCliente);
+            atualizarTabela();
+        }
     }
     
     private void editarCliente() {
@@ -124,17 +136,6 @@ public class ClienteForm extends JFrame {
         List<Cliente> clientesAtualizados = clienteService.buscarTodosClientes();
         tableModel.atualizarDados(clientesAtualizados);
     }
-    
-//    private Integer getClienteSelecionado() {
-//        int row = table.getSelectedRow(); // Obtém o índice da linha selecionada
-//        if (row == -1) { // Verifica se nenhuma linha está selecionada
-//            JOptionPane.showMessageDialog(this, "Selecione um cliente!");
-//            return null;
-//        }
-//        // Supondo que a coluna 0 da tabela seja o ID do cliente
-//        return (Integer) table.getValueAt(row, 0); 
-//    }
-
 
 }
 
