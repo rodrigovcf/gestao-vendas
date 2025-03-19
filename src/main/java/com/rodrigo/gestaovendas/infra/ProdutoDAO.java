@@ -1,6 +1,5 @@
 package com.rodrigo.gestaovendas.infra;
 
-import com.rodrigo.gestaovendas.domain.models.Cliente;
 import com.rodrigo.gestaovendas.domain.models.Produto;
 import com.rodrigo.gestaovendas.domain.repositories.ProdutoRepository;
 import com.rodrigo.gestaovendas.exceptions.DAOException;
@@ -69,6 +68,7 @@ public class ProdutoDAO implements ProdutoRepository{
 			try (ResultSet rs = stmt.executeQuery()) {
 				if (rs.next()) {
 					return Produto.builder()
+							.codigo(rs.getInt("codigo"))
 	                        .descricao(rs.getString("descricao"))
 	                        .preco(rs.getDouble("preco"))
 	                        .build();

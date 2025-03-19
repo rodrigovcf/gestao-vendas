@@ -123,10 +123,15 @@ public class ProdutoForm extends JFrame {
     }
 
     private void editarProduto() {
-        Integer idProduto = getProdutoSelecionado();
-        if (idProduto == null) return;
-
+    	int row = table.getSelectedRow();
+    	if (row == -1) {
+            JOptionPane.showMessageDialog(this, "Selecione um produto para editar!");
+            return;
+        }
+    	 
+    	int idProduto = (int) table.getValueAt(row, 0);
         Produto produto = produtoService.buscarProdutoPorId(idProduto);
+        
         new ProdutoCadastroView(produtoService, produto, this::atualizarTabela);
     }
 

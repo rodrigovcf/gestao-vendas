@@ -44,7 +44,7 @@ public class ProdutoCadastroView extends JFrame{
 	
 	
 	private void initUI() {
-        setTitle(produtoEdicao == null ? "Novo Cliente" : "Editar Cliente");
+        setTitle(produtoEdicao == null ? "Novo Produto" : "Editar Produto");
         setSize(400, 250);
         setLocationRelativeTo(null);
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
@@ -88,10 +88,10 @@ public class ProdutoCadastroView extends JFrame{
 
             double preco = Double.parseDouble(precoField.getText().trim());
             if (preco <= 0) {
-                throw new IllegalArgumentException("O limite de crédito deve ser um valor positivo.");
+                throw new IllegalArgumentException("O preço deve ser um valor positivo.");
             }
 
-            // Inicialização ou atualização do cliente
+            // Inicialização ou atualização do produto
             if (produtoEdicao == null) {
             	produtoEdicao = new Produto();
             }
@@ -99,12 +99,12 @@ public class ProdutoCadastroView extends JFrame{
             produtoEdicao.setDescricao(descricao);
             produtoEdicao.setPreco(preco);
 
-            if (produtoEdicao.getCodigo() == 0) { // Código 0 indica novo cliente
+            if (produtoEdicao.getCodigo() == 0) { // Código 0 indica novo produto
             	produtoService.cadastrarProduto(descricao, preco);
-                JOptionPane.showMessageDialog(this, "Novo cliente cadastrado com sucesso!");
+                JOptionPane.showMessageDialog(this, "Novo produto cadastrado com sucesso!");
             } else {
             	produtoService.atualizarProduto(produtoEdicao);
-                JOptionPane.showMessageDialog(this, "Cliente atualizado com sucesso!");
+                JOptionPane.showMessageDialog(this, "Produto atualizado com sucesso!");
             }
 
             // Callback para atualizar a lista
