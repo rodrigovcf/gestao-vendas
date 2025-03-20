@@ -29,8 +29,8 @@ public class ProdutoService {
         return produtoRepository.buscarDesc(termo);
     }
     
-    public Produto buscarProdutoPorId(int id) {
-        return produtoRepository.consultar(id);
+    public Produto buscarProdutoPorCodigo(int codigo) {
+        return produtoRepository.consultar(codigo);
     }
 
     public void excluirProduto(int id) {

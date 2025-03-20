@@ -12,5 +12,5 @@ public interface ClienteRepository {
     boolean excluir(int codigo);
     Cliente alterar(Cliente cliente);
     List<Cliente> buscarNome(String termo);
- 
+    Cliente buscarUmPorNome(String termo);
 }

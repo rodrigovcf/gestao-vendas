@@ -153,6 +153,28 @@ public class ClienteDAO implements ClienteRepository {
             throw new DAOException("Erro ao buscar clientes por nome", e);
         }
     }
+
+	@Override
+	public Cliente buscarUmPorNome(String termo) {
+		String sql = "SELECT * FROM clientes WHERE nome = ?";
+        try (Connection conexao = ConexaoBD.conectar(); PreparedStatement stmt = conexao.prepareStatement(sql)) {
+
+            stmt.setString(1, termo);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return Cliente.builder()
+                            .codigo(rs.getInt("codigo"))
+                            .nome(rs.getString("nome"))
+                            .limiteCompra(rs.getDouble("limite_compra"))
+                            .diaFechamentoFatura(Util.toLocalDate(rs.getDate("dia_fechamento_fatura"))) // Utilitário
+                            .build();
+                }
+            }
+        } catch (SQLException e) {
+            throw new DAOException("Erro ao buscar cliente", e);
+        }
+        return null; // Cliente não encontrado
+	}
 }
 
 // Classe Utilitária para conversão de datas

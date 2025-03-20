@@ -45,6 +45,10 @@ public class ClienteService {
 	public List<Cliente> buscarPorNome(String termo) {
 		return clienteRepository.buscarNome(termo);
 	}
+	
+	public Cliente buscarUmPorNome(String termo) {
+		return clienteRepository.buscarUmPorNome(termo);
+	}
 
 	public void atualizarCliente(Cliente clienteEdicao) {
 	    if (clienteEdicao == null) {

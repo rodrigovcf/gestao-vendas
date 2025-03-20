@@ -70,5 +70,36 @@ public class VendaService {
     public List<Venda> buscarVendasPorPeriodo(Date inicio, Date fim) {
         return vendaRepository.buscarPorPeriodo(inicio, fim);
     }
+
+	public List<Venda> listarTodos() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	public Venda consultar(int codigoVenda) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	public void excluir(int codigoVenda) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	public List<Venda> buscarPorFiltros(String cliente, String produto, LocalDate inicio, LocalDate fim) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	public void incluir(Venda venda) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	public void alterar(Venda venda) {
+		// TODO Auto-generated method stub
+		
+	}
+
 }
 
