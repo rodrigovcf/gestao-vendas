@@ -21,6 +21,9 @@ import com.rodrigo.gestaovendas.app.ProdutoService;
 import com.rodrigo.gestaovendas.app.VendaService;
 import com.rodrigo.gestaovendas.ui.cliente.ClienteForm;
 import com.rodrigo.gestaovendas.ui.produto.ProdutoForm;
+import com.rodrigo.gestaovendas.ui.venda.VendaCadastroView;
+import com.rodrigo.gestaovendas.ui.venda.VendaForm;
+import com.rodrigo.gestaovendas.utils.VendaCadastroViewBKP_CODE;
 
 public class MenuPrincipal extends JFrame {
 
@@ -118,7 +121,9 @@ public class MenuPrincipal extends JFrame {
         });
 
         vendasButton.addActionListener(e -> {
-               // new VendaForm(vendaService); // Passa o VendaService ao abrir a janela
+                new VendaCadastroView();
+        		//new VendaForm(vendaService, clienteService, produtoService); // Passa o VendaService ao abrir a janela
+        		//new VendaCadastroViewBKP_CODE(vendaService, clienteService, produtoService, null, null).setVisible(true); // Passa o VendaService ao abrir a janela
         });
         
         logoutButton.addActionListener(e -> {

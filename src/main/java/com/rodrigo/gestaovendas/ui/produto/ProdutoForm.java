@@ -130,7 +130,7 @@ public class ProdutoForm extends JFrame {
         }
     	 
     	int idProduto = (int) table.getValueAt(row, 0);
-        Produto produto = produtoService.buscarProdutoPorId(idProduto);
+        Produto produto = produtoService.buscarProdutoPorCodigo(idProduto);
         
         new ProdutoCadastroView(produtoService, produto, this::atualizarTabela);
     }
