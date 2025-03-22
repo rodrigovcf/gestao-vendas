@@ -1,65 +1,75 @@
 # Gestão de Vendas
 
-Este projeto é uma aplicação Java desenvolvida para gerenciar vendas, permitindo o cadastro e a gestão de clientes, produtos e transações comerciais.
-
-## Funcionalidades
-
-- **Cadastro de Clientes**: Adicione, edite e remova informações de clientes.
-- **Cadastro de Produtos**: Gerencie o catálogo de produtos disponíveis para venda.
-- **Processamento de Vendas**: Registre e acompanhe as vendas realizadas.
+Este projeto é um sistema de gestão de vendas desenvolvido em Java com Swing para a interface gráfica e PostgreSQL como banco de dados. Ele permite o cadastro de clientes, produtos, e a gestão de vendas, incluindo um carrinho de compras.
 
 ## Tecnologias Utilizadas
+- **Java** (Swing para interface gráfica)
+- **PostgreSQL** (Banco de dados relacional)
+- **Maven** (Gerenciamento de dependências)
+- **JDBC** (Conexão com banco de dados)
 
-- **Linguagem**: Java
-- **Interface Gráfica**: Swing
-- **Persistência de Dados**: PostgreSQL
+## Funcionalidades
+- Cadastro de clientes
+- Cadastro de produtos
+- Registro de vendas
+- Adição de itens ao carrinho
+- Cálculo automático do total da venda
 
-## Pré-requisitos
+## Estrutura do Banco de Dados
 
-- Java Development Kit (JDK) 8 ou superior
-- PostgreSQL 9.6 ou superior
+O projeto utiliza as seguintes tabelas no PostgreSQL:
 
-## Configuração do Banco de Dados
+```sql
+CREATE TABLE public.clientes (
+    codigo SERIAL PRIMARY KEY,
+    nome VARCHAR(100) NOT NULL,
+    limite_compra NUMERIC(10,2) NOT NULL,
+    dia_fechamento_fatura DATE NOT NULL
+);
 
-1. Instale o PostgreSQL e crie um banco de dados para a aplicação.
-2. Configure a conexão com o banco de dados no arquivo `DatabaseConfig.java`, fornecendo a URL do banco, usuário e senha.
+CREATE TABLE public.produto (
+    codigo SERIAL PRIMARY KEY,
+    descricao VARCHAR(255) NOT NULL,
+    preco NUMERIC(10,2) NOT NULL
+);
 
-## Instalação e Execução
+CREATE TABLE public.venda (
+    codigo SERIAL PRIMARY KEY,
+    codigo_cliente INTEGER NOT NULL,
+    data_venda DATE NOT NULL,
+    valor_total NUMERIC(10,2) NOT NULL,
+    CONSTRAINT fk_venda_cliente FOREIGN KEY (codigo_cliente)
+        REFERENCES public.clientes (codigo)
+        ON UPDATE CASCADE
+        ON DELETE CASCADE
+);
 
-1. Clone o repositório:
+CREATE TABLE public.venda_produto (
+    codigo_venda INTEGER NOT NULL,
+    codigo_produto INTEGER NOT NULL,
+    quantidade INTEGER NOT NULL,
+    PRIMARY KEY (codigo_venda, codigo_produto),
+    CONSTRAINT fk_venda_produto_venda FOREIGN KEY (codigo_venda)
+        REFERENCES public.venda (codigo)
+        ON UPDATE CASCADE
+        ON DELETE CASCADE,
+    CONSTRAINT fk_venda_produto FOREIGN KEY (codigo_produto)
+        REFERENCES public.produto (codigo)
+        ON UPDATE CASCADE
+        ON DELETE CASCADE
+);
+```
 
-   ```bash
+## Como Executar o Projeto
+
+1. Clone este repositório:
+   ```sh
    git clone https://github.com/rodrigovcf/gestao-vendas.git
    ```
+2. Configure o banco de dados PostgreSQL e execute os scripts acima.
+3. Importe o projeto em sua IDE preferida (Eclipse, IntelliJ, etc.).
+4. Configure a conexão com o banco de dados no arquivo de propriedades.
+5. Execute a aplicação Java.
 
-2. Navegue até o diretório do projeto:
-
-   ```bash
-   cd gestao-vendas
-   ```
-
-3. Compile o código-fonte:
-
-   ```bash
-   javac -d bin src/**/*.java
-   ```
-
-4. Execute a aplicação:
-
-   ```bash
-   java -cp bin com.rodrigo.gestaovendas.Main
-   ```
-
-## Estrutura do Projeto
-
-- **src/**: Contém o código-fonte da aplicação.
-- **bin/**: Diretório para os arquivos compilados.
-- **lib/**: Bibliotecas externas utilizadas no projeto.
-
-## Contribuições
-
-Contribuições são bem-vindas! Sinta-se à vontade para abrir issues e pull requests.
-
-## Licença
-
-Este projeto está licenciado sob a [MIT License](LICENSE).
+## Contribuição
+Sinta-se à vontade para abrir issues e enviar pull requests para melhorias.
