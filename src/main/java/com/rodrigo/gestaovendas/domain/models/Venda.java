@@ -14,6 +14,7 @@ import java.util.List;
 public class Venda {
     
     private int codigo;
+    private int CodigoCliente;
     private Cliente cliente;
     private List<ItemVenda> itens; 
     private LocalDate data;

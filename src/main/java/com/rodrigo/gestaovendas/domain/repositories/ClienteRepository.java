@@ -13,4 +13,5 @@ public interface ClienteRepository {
     Cliente alterar(Cliente cliente);
     List<Cliente> buscarNome(String termo);
     Cliente buscarUmPorNome(String termo);
+    void atualizarLimiteCompra(int clienteId, double novoLimite);
 }

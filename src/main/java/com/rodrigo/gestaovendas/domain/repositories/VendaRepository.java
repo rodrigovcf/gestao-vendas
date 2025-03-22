@@ -5,13 +5,17 @@ import java.util.List;
 import com.rodrigo.gestaovendas.domain.models.*;
 
 public interface VendaRepository {
-   
-	void incluir(Venda venda);
+  
+	int incluir(Venda venda); // Retorna o ID da venda criada
+	void salvarItensVenda(List<ItemVenda> itens);
+	List<VendaDTO> carregarDadosVendas();
     Venda consultar(int codigo);
     List<Venda> listarTodos();
     boolean excluir(int codigo);
     Venda alterar(Venda venda);
     
 	List<Venda> buscarPorCliente(int clienteId);
-	List<Venda> buscarPorPeriodo(Date inicio, Date fim);
+	public List<Venda> buscarPorPeriodo(Date inicio, Date fim);
+
+	
 }

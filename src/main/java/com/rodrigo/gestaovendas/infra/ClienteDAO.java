@@ -175,6 +175,21 @@ public class ClienteDAO implements ClienteRepository {
         }
         return null; // Cliente não encontrado
 	}
+
+	@Override
+	public void atualizarLimiteCompra(int clienteId, double novoLimite) {
+	    String sql = "UPDATE clientes SET limite_compra = ? WHERE codigo = ?";
+	    try (Connection conexao = ConexaoBD.conectar();
+	         PreparedStatement stmt = conexao.prepareStatement(sql)) {
+
+	        stmt.setDouble(1, novoLimite); // Define o novo limite
+	        stmt.setInt(2, clienteId);    // ID do cliente
+	        stmt.executeUpdate();         // Executa a atualização
+	    } catch (SQLException e) {
+	        throw new RuntimeException("Erro ao atualizar o limite de compra: " + e.getMessage(), e);
+	    }
+	}
+
 }
 
 // Classe Utilitária para conversão de datas

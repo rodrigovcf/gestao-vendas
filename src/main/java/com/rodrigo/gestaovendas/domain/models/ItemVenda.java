@@ -10,6 +10,8 @@ import lombok.*;
 @Builder
 public class ItemVenda {
     
+	private int codigoVenda;
+	private int codigoProduto;
     private Produto produto;   
     private int quantidade;    
     private double precoUnitario;
