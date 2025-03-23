@@ -162,6 +162,13 @@ public class VendaService {
     }
 
 
+    public void alterar(Venda venda) {
+        if (venda == null || venda.getCodigo() <= 0) {
+            throw new IllegalArgumentException("Venda inválida para atualização.");
+        }
+
+        vendaRepository.alterar(venda); 
+    }
 
 
 
@@ -190,10 +197,7 @@ public class VendaService {
 		
 	}
 
-	public void alterar(Venda venda) {
-		// TODO Auto-generated method stub
-		
-	}
+	
 
 }
 

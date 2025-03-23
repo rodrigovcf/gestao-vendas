@@ -16,6 +16,7 @@ public interface VendaRepository {
     
 	List<Venda> buscarPorCliente(int clienteId);
 	public List<Venda> buscarPorPeriodo(Date inicio, Date fim);
+	List<VendaDTO> filtrarDados(String cliente, String produto, String dataInicio, String dataFim);
 
 	
 }

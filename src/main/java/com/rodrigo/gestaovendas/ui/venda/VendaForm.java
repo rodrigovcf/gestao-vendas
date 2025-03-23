@@ -1,7 +1,6 @@
 package com.rodrigo.gestaovendas.ui.venda;
 import java.awt.BorderLayout;
 import java.awt.FlowLayout;
-import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 import javax.swing.JButton;
@@ -34,13 +33,17 @@ public class VendaForm extends JFrame {
     private JButton btnIncluir, btnExcluir, btnAlterar, btnConsultar, btnVisualizarPorCliente, btnVisualizarPorProduto, btnFiltrar;
     private VendaRepository vendaRepository;
     
-    public VendaForm(VendaRepository vendaRepository) {
-        this.vendaRepository = vendaRepository;
-
-        setTitle("Gerenciamento de Vendas");
+    private void configurarJanela() {
+    	setTitle("Gerenciamento de Vendas");
         setSize(800, 600);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
+        setVisible(true);
+    }
+    
+    public VendaForm() {
+
+        configurarJanela();
         vendaRepository = new VendaDAO();
         inicializarComponentes();
 
@@ -48,7 +51,13 @@ public class VendaForm extends JFrame {
         carregarDadosTabela();
     }
 
-
+//    public VendaForm() {
+//    	configurarJanela();
+//    	inicializarComponentes();
+//    	carregarDadosTabela();
+//    }
+    
+    
 
     private void inicializarComponentes() {
         // Configurar layout principal
@@ -183,19 +192,19 @@ public class VendaForm extends JFrame {
             return;
         }
 
-        // Abrir a tela de edição
+     // Criação da janela de edição
         VendaCadastroView cadastroView = new VendaCadastroView(vendaRepository, venda);
+
+        // Adiciona um listener para recarregar os dados após fechar a janela
+        cadastroView.addWindowListener(new java.awt.event.WindowAdapter() {
+            @Override
+            public void windowClosed(java.awt.event.WindowEvent e) {
+                carregarDadosTabela(); // Atualiza os dados da tabela ao fechar a janela
+            }
+        });
+
         cadastroView.setVisible(true);
-
-        // Após a edição e salvamento, a venda alterada será retornada
-        Venda vendaAlterada = vendaRepository.alterar(venda);
-
-        if (vendaAlterada != null) {
-            carregarDadosTabela(); // Atualiza a tabela
-            JOptionPane.showMessageDialog(this, "Venda alterada com sucesso!", "Sucesso", JOptionPane.INFORMATION_MESSAGE);
-        } else {
-            JOptionPane.showMessageDialog(this, "Erro ao alterar venda.", "Erro", JOptionPane.ERROR_MESSAGE);
-        }
+       
     }
 
 
@@ -214,39 +223,54 @@ public class VendaForm extends JFrame {
         JOptionPane.showMessageDialog(this, "Função de visualização por produto implementada aqui.");
     }
 
-    // Método para filtrar vendas
     private void filtrarVendas() {
         String cliente = txtFiltroCliente.getText();
         String produto = txtFiltroProduto.getText();
         String dataInicio = txtFiltroDataInicio.getText();
         String dataFim = txtFiltroDataFim.getText();
 
-        JOptionPane.showMessageDialog(this, String.format("Filtro aplicado:\nCliente: %s\nProduto: %s\nPeríodo: %s a %s",
-                cliente, produto, dataInicio, dataFim));
-    }
-    
-    private void carregarDadosTabela() {
-        DefaultTableModel modeloTabela = (DefaultTableModel) tabelaVendas.getModel();
-        modeloTabela.setRowCount(0); // Limpa os dados atuais da tabela
+        List<VendaDTO> vendasFiltradas = vendaRepository.filtrarDados(cliente, produto, dataInicio, dataFim);
 
-        List<VendaDTO> vendas = vendaRepository.carregarDadosVendas();
-        for (VendaDTO venda : vendas) {
+        DefaultTableModel modeloTabela = (DefaultTableModel) tabelaVendas.getModel();
+        modeloTabela.setRowCount(0); // Limpa os dados da tabela
+
+        for (VendaDTO venda : vendasFiltradas) {
             modeloTabela.addRow(new Object[]{
                 venda.getId(),
                 venda.getCliente(),
                 venda.getProduto(),
                 venda.getQuantidade(),
-                venda.getData().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")),
+                venda.getData(),
                 String.format("%.2f", venda.getTotal())
             });
         }
     }
 
 
+    private void carregarDadosTabela() {
+        DefaultTableModel modeloTabela = (DefaultTableModel) tabelaVendas.getModel();
+        modeloTabela.setRowCount(0); // Limpa os dados existentes na tabela
+
+        // Busca todas as vendas atualizadas no banco
+        List<VendaDTO> vendas = vendaRepository.carregarDadosVendas(); // Um método no VendaRepository
+
+        // Preenche a tabela com os dados das vendas
+        for (VendaDTO venda : vendas) {
+            modeloTabela.addRow(new Object[]{
+                venda.getId(),
+                venda.getCliente(),  // Nome do cliente
+                venda.getProduto(),
+                venda.getQuantidade(),
+                venda.getData(),               // Data da venda
+                String.format("%.2f", venda.getTotal()) // Valor total formatado
+            });
+        }
+    }
+   
+
     public static void main(String[] args) {
     	SwingUtilities.invokeLater(() -> {
-            VendaRepository vendaRepository = new VendaDAO();
-            VendaForm vendaForm = new VendaForm(vendaRepository);
+            VendaForm vendaForm = new VendaForm();
             vendaForm.setVisible(true);
         });
     }

@@ -121,9 +121,7 @@ public class MenuPrincipal extends JFrame {
         });
 
         vendasButton.addActionListener(e -> {
-                new VendaCadastroView();
-        		//new VendaForm(vendaService, clienteService, produtoService); // Passa o VendaService ao abrir a janela
-        		//new VendaCadastroViewBKP_CODE(vendaService, clienteService, produtoService, null, null).setVisible(true); // Passa o VendaService ao abrir a janela
+        		new VendaForm();
         });
         
         logoutButton.addActionListener(e -> {

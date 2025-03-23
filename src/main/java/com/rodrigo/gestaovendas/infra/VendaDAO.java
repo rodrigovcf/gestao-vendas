@@ -42,41 +42,84 @@ public class VendaDAO implements VendaRepository {
         return 0;
     }
 	
-    @Override
-    public Venda consultar(int codigo) {
-        String sql = "SELECT v.codigo, v.codigo_cliente, v.data, v.valor_total, c.nome FROM venda v " +
-                     "JOIN clientes c ON v.codigo_cliente = c.codigo WHERE v.codigo = ?";
+	@Override
+	public Venda consultar(int idVenda) {
+	    String sqlVenda = "SELECT v.codigo AS id_venda, v.codigo_cliente, v.data_venda, v.valor_total " +
+	                      "FROM venda v " +
+	                      "WHERE v.codigo = ?";
+	    String sqlCliente = "SELECT codigo, nome, limite_compra, dia_fechamento_fatura " +
+	                        "FROM clientes " +
+	                        "WHERE codigo = ?";
+	    String sqlProdutos = "SELECT vp.codigo_produto, vp.quantidade, p.descricao, p.preco " +
+	                         "FROM venda_produto vp " +
+	                         "JOIN produto p ON vp.codigo_produto = p.codigo " +
+	                         "WHERE vp.codigo_venda = ?";
 
-        try (Connection conexao = ConexaoBD.conectar();
-             PreparedStatement stmt = conexao.prepareStatement(sql)) {
+	    try (Connection conexao = ConexaoBD.conectar();
+	         PreparedStatement stmtVenda = conexao.prepareStatement(sqlVenda);
+	         PreparedStatement stmtCliente = conexao.prepareStatement(sqlCliente);
+	         PreparedStatement stmtProdutos = conexao.prepareStatement(sqlProdutos)) {
 
-            stmt.setInt(1, codigo);
-            ResultSet rs = stmt.executeQuery();
+	        // Consultar informações da venda
+	        stmtVenda.setInt(1, idVenda);
+	        ResultSet rsVenda = stmtVenda.executeQuery();
 
-            if (rs.next()) {
-                Cliente cliente = Cliente.builder() 
-                        .codigo(rs.getInt("cliente_id"))
-                        .nome(rs.getString("nome"))
-                        .build();
+	        if (!rsVenda.next()) {
+	            return null; // Venda não encontrada
+	        }
 
-                Venda venda = Venda.builder()
-                        .codigo(rs.getInt("codigo"))
-                        .cliente(cliente)
-                        .data(rs.getDate("data").toLocalDate())
-                        .valorTotal(rs.getDouble("valor_total"))
-                        .build();
+	        Venda venda = new Venda();
+	        venda.setCodigo(rsVenda.getInt("id_venda"));
+	        venda.setCodigoCliente(rsVenda.getInt("codigo_cliente"));
+	        venda.setData(rsVenda.getDate("data_venda").toLocalDate());
+	        venda.setValorTotal(rsVenda.getDouble("valor_total"));
 
-                List<ItemVenda> itens = carregarItensVenda(venda.getCodigo());
-                venda.setItens(itens);
+	        // Consultar informações do cliente
+	        stmtCliente.setInt(1, venda.getCodigoCliente());
+	        ResultSet rsCliente = stmtCliente.executeQuery();
 
-                return venda;
-            }
-            return null;
+	        if (rsCliente.next()) {
+	            Cliente cliente = new Cliente();
+	            cliente.setCodigo(rsCliente.getInt("codigo"));
+	            cliente.setNome(rsCliente.getString("nome"));
+	            cliente.setLimiteCompra(rsCliente.getDouble("limite_compra"));
+	            cliente.setDiaFechamentoFatura(rsCliente.getDate("dia_fechamento_fatura").toLocalDate());
 
-        } catch (SQLException e) {
-            throw new DAOException("Erro ao consultar venda com código " + codigo, e);
-        }
-    }
+	            venda.setCliente(cliente); // Associar o cliente à venda
+	        } else {
+	            throw new RuntimeException("Cliente associado à venda não encontrado.");
+	        }
+
+	        // Consultar os produtos associados à venda
+	        stmtProdutos.setInt(1, idVenda);
+	        ResultSet rsProdutos = stmtProdutos.executeQuery();
+
+	        List<ItemVenda> itensVenda = new ArrayList<>();
+	        while (rsProdutos.next()) {
+	            ItemVenda item = new ItemVenda();
+
+	            Produto produto = new Produto();
+	            produto.setCodigo(rsProdutos.getInt("codigo_produto"));
+	            produto.setDescricao(rsProdutos.getString("descricao"));
+	            produto.setPreco(rsProdutos.getDouble("preco"));
+
+	            item.setProduto(produto);
+	            item.setCodigoProduto(produto.getCodigo());
+	            item.setQuantidade(rsProdutos.getInt("quantidade"));
+	            item.setPrecoUnitario(produto.getPreco());
+
+	            itensVenda.add(item);
+	        }
+	        venda.setItens(itensVenda);
+
+	        return venda;
+
+	    } catch (SQLException e) {
+	        throw new RuntimeException("Erro ao consultar venda por ID: " + e.getMessage(), e);
+	    }
+	}
+
+
 
     @Override
     public List<Venda> listarTodos() {
@@ -92,7 +135,7 @@ public class VendaDAO implements VendaRepository {
 
             while (rs.next()) {
                 Cliente cliente = Cliente.builder()
-                        .codigo(rs.getInt("cliente_id"))
+                        .codigo(rs.getInt("codigo_cliente"))
                         .nome(rs.getString("nome"))
                         .build();
 
@@ -145,7 +188,7 @@ public class VendaDAO implements VendaRepository {
 
     @Override
     public Venda alterar(Venda venda) {
-        String sqlAtualizarVenda = "UPDATE venda SET codigo_cliente = ?, data_venda = ? WHERE codigo = ?";
+        String sqlAtualizarVenda = "UPDATE venda SET valor_total = ?, codigo_cliente = ?, data_venda = ? WHERE codigo = ?";
         String sqlExcluirProdutos = "DELETE FROM venda_produto WHERE codigo_venda = ?";
         String sqlInserirProdutos = "INSERT INTO venda_produto (codigo_venda, codigo_produto, quantidade) VALUES (?, ?, ?)";
 
@@ -155,9 +198,10 @@ public class VendaDAO implements VendaRepository {
              PreparedStatement stmtInserirProdutos = conexao.prepareStatement(sqlInserirProdutos)) {
 
             // Atualizar os dados da tabela 'venda'
-            stmtVenda.setInt(1, venda.getCodigoCliente());
-            stmtVenda.setDate(2, java.sql.Date.valueOf(venda.getData()));
-            stmtVenda.setInt(3, venda.getCodigo());
+        	stmtVenda.setDouble(1, venda.getValorTotal()); 
+        	stmtVenda.setInt(2, venda.getCodigoCliente());
+            stmtVenda.setDate(3, java.sql.Date.valueOf(venda.getData()));
+            stmtVenda.setInt(4, venda.getCodigo());
             stmtVenda.executeUpdate();
 
             // Excluir os produtos antigos relacionados à venda
@@ -318,12 +362,32 @@ public class VendaDAO implements VendaRepository {
 	    return vendas;
 	}
 
+	@Override
+	public List<VendaDTO> filtrarDados(String cliente, String produto, String dataInicio, String dataFim) {
+		// TODO Auto-generated method stub
+		return null;
+	}
 
-	
-
-	
-
-
+//	@Override
+//	public String buscarNomeCliente(int idCliente) {
+//	    String sql = "SELECT nome FROM clientes WHERE codigo = ?";
+//
+//	    try (Connection conexao = ConexaoBD.conectar();
+//	         PreparedStatement stmt = conexao.prepareStatement(sql)) {
+//
+//	        stmt.setInt(1, idCliente);
+//	        ResultSet rs = stmt.executeQuery();
+//
+//	        if (rs.next()) {
+//	            return rs.getString("nome");
+//	        }
+//
+//	        return null;
+//
+//	    } catch (SQLException e) {
+//	        throw new RuntimeException("Erro ao buscar nome do cliente: " + e.getMessage(), e);
+//	    }
+//	}
 
 }
 
