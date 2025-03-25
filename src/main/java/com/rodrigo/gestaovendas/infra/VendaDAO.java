@@ -120,7 +120,6 @@ public class VendaDAO implements VendaRepository {
 	}
 
 
-
     @Override
     public List<Venda> listarTodos() {
         String sql = "SELECT v.codigo, v.codigo_cliente, v.data_venda, v.valor_total, c.nome FROM venda v " +
@@ -226,47 +225,6 @@ public class VendaDAO implements VendaRepository {
     }
 
 
-//    // Método auxiliar para atualizar os itens da venda
-//    private void atualizarItensVenda(Venda venda) {
-//        // Primeiro, remove os itens antigos da venda
-//        String sqlDelete = "DELETE FROM item_venda WHERE venda_codigo = ?";
-//
-//        try (Connection conexao = ConexaoBD.conectar();
-//             PreparedStatement stmt = conexao.prepareStatement(sqlDelete)) {
-//
-//            stmt.setInt(1, venda.getCodigo());
-//            stmt.executeUpdate();
-//
-//        } catch (SQLException e) {
-//            throw new DAOException("Erro ao remover itens antigos da venda com código " + venda.getCodigo(), e);
-//        }
-//
-//        inserirItensVenda(venda);
-//    }
-
-
-    // Método auxiliar para inserir os itens da venda
-    private void inserirItensVenda(Venda venda) {
-        String sql = "INSERT INTO item_venda (venda_codigo, produto_codigo, quantidade, valor_total) VALUES (?, ?, ?, ?)";
-
-        try (Connection conexao = ConexaoBD.conectar();
-             PreparedStatement stmt = conexao.prepareStatement(sql)) {
-
-            for (ItemVenda item : venda.getItens()) {
-                stmt.setInt(1, venda.getCodigo());
-                stmt.setInt(2, item.getProduto().getCodigo());
-                stmt.setInt(3, item.getQuantidade());
-                stmt.setDouble(4, item.getValorTotal());
-                stmt.addBatch();
-            }
-
-            stmt.executeBatch();
-
-        } catch (SQLException e) {
-            throw new DAOException("Erro ao inserir itens da venda com código " + venda.getCodigo(), e);
-        }
-    }
-
     private List<ItemVenda> carregarItensVenda(int vendaCodigo) {
         String sql = "SELECT iv.produto_codigo, iv.quantidade, iv.valor_total, p.descricao FROM item_venda iv " +
                      "JOIN produto p ON iv.produto_codigo = p.codigo WHERE iv.venda_codigo = ?";
@@ -299,6 +257,39 @@ public class VendaDAO implements VendaRepository {
 
         return itens;
     }
+    
+    @Override
+    public Venda buscarVendaPorId(int idVenda) {
+        String sql = "SELECT v.codigo, v.valor_total, v.data_venda, c.codigo AS codigo_cliente, c.nome AS nome_cliente " +
+                     "FROM venda v " +
+                     "JOIN clientes c ON v.codigo_cliente = c.codigo " +
+                     "WHERE v.codigo = ?";
+        try (Connection conexao = ConexaoBD.conectar();
+             PreparedStatement stmt = conexao.prepareStatement(sql)) {
+
+            stmt.setInt(1, idVenda);
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    Venda venda = new Venda();
+                    venda.setCodigo(rs.getInt("codigo"));
+                    venda.setValorTotal(rs.getDouble("valor_total"));
+                    venda.setData(rs.getDate("data_venda").toLocalDate());
+
+                    Cliente cliente = new Cliente();
+                    cliente.setCodigo(rs.getInt("codigo_cliente"));
+                    cliente.setNome(rs.getString("nome_cliente"));
+                    venda.setCliente(cliente);
+
+                    return venda;
+                }
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Erro ao buscar venda por ID: " + e.getMessage(), e);
+        }
+        return null; // Retorna nulo caso a venda não seja encontrada
+    }
+
 
 	@Override
 	public List<Venda> buscarPorCliente(int clienteId) {
@@ -306,11 +297,7 @@ public class VendaDAO implements VendaRepository {
 		return null;
 	}
 
-	@Override
-	public List<Venda> buscarPorPeriodo(java.util.Date inicio, java.util.Date fim) {
-		// Melhorias
-		return null;
-	}
+	
 
 	@Override
     public void salvarItensVenda(List<ItemVenda> itens) {
@@ -368,26 +355,53 @@ public class VendaDAO implements VendaRepository {
 		return null;
 	}
 
-//	@Override
-//	public String buscarNomeCliente(int idCliente) {
-//	    String sql = "SELECT nome FROM clientes WHERE codigo = ?";
-//
-//	    try (Connection conexao = ConexaoBD.conectar();
-//	         PreparedStatement stmt = conexao.prepareStatement(sql)) {
-//
-//	        stmt.setInt(1, idCliente);
-//	        ResultSet rs = stmt.executeQuery();
-//
-//	        if (rs.next()) {
-//	            return rs.getString("nome");
-//	        }
-//
-//	        return null;
-//
-//	    } catch (SQLException e) {
-//	        throw new RuntimeException("Erro ao buscar nome do cliente: " + e.getMessage(), e);
-//	    }
-//	}
+	@Override
+	public List<Venda> buscarPorPeriodo(Date inicio, Date fim, int clienteId) {
+	    String sql = "SELECT v.codigo, v.valor_total, v.data_venda, " +
+	                 "c.codigo AS codigo_cliente, c.nome AS nome_cliente, " +
+	                 "c.limite_compra AS limite_cliente, c.dia_fechamento_fatura AS fechamento_cliente " +
+	                 "FROM venda v " +
+	                 "JOIN clientes c ON v.codigo_cliente = c.codigo " +
+	                 "WHERE v.data_venda BETWEEN ? AND ? AND v.codigo_cliente = ?";
+
+	    List<Venda> vendas = new ArrayList<>();
+	    try (Connection conexao = ConexaoBD.conectar();
+	         PreparedStatement stmt = conexao.prepareStatement(sql)) {
+
+	        stmt.setDate(1, new java.sql.Date(inicio.getTime()));
+	        stmt.setDate(2, new java.sql.Date(fim.getTime()));
+	        stmt.setInt(3, clienteId);
+
+	        try (ResultSet rs = stmt.executeQuery()) {
+	            while (rs.next()) {
+	                // Mapeia os dados da venda
+	                Venda venda = new Venda();
+	                venda.setCodigo(rs.getInt("codigo"));
+	                venda.setValorTotal(rs.getDouble("valor_total"));
+	                venda.setData(rs.getDate("data_venda").toLocalDate());
+
+	                // Mapeia os dados do cliente
+	                Cliente cliente = new Cliente();
+	                cliente.setCodigo(rs.getInt("codigo_cliente"));
+	                cliente.setNome(rs.getString("nome_cliente"));
+	                cliente.setLimiteCompra(rs.getDouble("limite_cliente"));
+	                cliente.setDiaFechamentoFatura(rs.getDate("fechamento_cliente") != null 
+	                    ? rs.getDate("fechamento_cliente").toLocalDate()
+	                    : null);
+	                
+	                // Associa o cliente à venda
+	                venda.setCliente(cliente);
+
+	                vendas.add(venda);
+	            }
+	        }
+	    } catch (SQLException e) {
+	        throw new RuntimeException("Erro ao buscar vendas por período: " + e.getMessage(), e);
+	    }
+	    return vendas;
+	}
+
+
 
 }
 

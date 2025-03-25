@@ -68,7 +68,8 @@ public class VendaCadastroView extends JFrame {
 
 	private Venda venda; // Armazena a venda para edição, se necessário
 
-	private VendaRepository vendaRepository;	
+	private VendaRepository vendaRepository;
+	private VendaService vendaService;
 
 	private void configurarJanela() {
 	    setTitle("PDV");
@@ -392,8 +393,8 @@ public class VendaCadastroView extends JFrame {
           }
       });
       
-      VendaRepository vendaRepository = new VendaDAO();
-      VendaService vendaService = new VendaService(vendaRepository, clienteRepository, produtoRepository);
+      vendaRepository = new VendaDAO();
+      vendaService = new VendaService(vendaRepository, clienteRepository, produtoRepository);
 
       
       btnSalvar.addActionListener(e -> {
@@ -464,6 +465,7 @@ public class VendaCadastroView extends JFrame {
     	                    "Venda cadastrada com sucesso!",
     	                    "Sucesso",
     	                    JOptionPane.INFORMATION_MESSAGE);
+    	            //atualizarTabela();
     	        }
 
     	        limparCamposVenda(); // Limpa os campos após salvar
@@ -657,8 +659,6 @@ public class VendaCadastroView extends JFrame {
               }
           }
       });
-
-      
       
       btnCancelar.addActionListener(e -> dispose());
 
@@ -667,7 +667,24 @@ public class VendaCadastroView extends JFrame {
 
     }
     
-    private List<ItemVenda> convertToItensVenda(Map<Integer, Integer> produtosQuantidade) {
+    private void atualizarTabela() {
+        DefaultTableModel modelo = (DefaultTableModel) tabelaCarrinho.getModel();
+        modelo.setRowCount(0); // Limpa os dados existentes
+
+        List<Venda> vendasAtualizadas = vendaService.buscarTodasVendas(); // Recupera todas as vendas
+
+        for (Venda venda : vendasAtualizadas) {
+            modelo.addRow(new Object[]{
+                venda.getCodigo(), // Código da venda
+                venda.getCliente().getNome(), // Nome do cliente
+                venda.getItens().size(), // Número de itens na venda
+                venda.getValorTotal() // Valor total da venda
+            });
+        }
+    }
+
+
+	private List<ItemVenda> convertToItensVenda(Map<Integer, Integer> produtosQuantidade) {
     List<ItemVenda> itensVenda = new ArrayList<>();
     for (Map.Entry<Integer, Integer> entry : produtosQuantidade.entrySet()) {
         Produto produto = produtoService.buscarProdutoPorCodigo(entry.getKey());
@@ -681,37 +698,7 @@ public class VendaCadastroView extends JFrame {
         }
     }
     return itensVenda;
-}
-
-
-//	private void salvarNovaVenda() {
-//        Venda novaVenda = new Venda();
-//        novaVenda.setCodigoCliente(clienteSelecionado.getId());
-//        novaVenda.setData(LocalDate.now()); // Ajuste conforme necessário
-//        novaVenda.setItensVenda(itensVenda); // Lista de itens da tabela
-//        novaVenda.setTotal(calcularTotalVenda());
-//
-//        vendaRepository.salvar(novaVenda); // Salva a nova venda no banco
-//    }
-//    
-//    private void atualizarVenda() {
-//        if (venda == null) {
-//            throw new RuntimeException("Venda não carregada para edição.");
-//        }
-//
-//        venda.setItensVenda(itensVenda); // Atualiza a lista de itens
-//        venda.setTotal(calcularTotalVenda()); // Recalcula o total
-//        vendaRepository.alterar(venda); // Atualiza no banco
-//    }
-
-    
-    
-    private void limpaCamposProdutos() {
-    	txtBuscaCodigo.setText("");
-        txtDescricao.setText("");
-        txtPreco.setText("");
-        txtQtd.setText("");
-	}
+}    
 
 
 	private void exibirDialogoSelecaoClientes(List<Cliente> clientes, JTextField txtNomeCliente,
@@ -761,6 +748,13 @@ public class VendaCadastroView extends JFrame {
 
         dialog.add(panel);
         dialog.setVisible(true);
+	}
+	
+	private void limpaCamposProdutos() {
+    	txtBuscaCodigo.setText("");
+        txtDescricao.setText("");
+        txtPreco.setText("");
+        txtQtd.setText("");
 	}
 
     private void limparCamposVenda() {

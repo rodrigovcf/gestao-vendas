@@ -1,14 +1,15 @@
 package com.rodrigo.gestaovendas.ui.cliente;
 
+import java.time.format.DateTimeFormatter;
 import java.util.List;
-
-import com.rodrigo.gestaovendas.domain.models.Cliente;
 
 import javax.swing.table.AbstractTableModel;
 
+import com.rodrigo.gestaovendas.domain.models.Cliente;
+
 public class ClienteTableModel extends AbstractTableModel {
     private static final long serialVersionUID = 1L;
-	private String[] colunas = {"ID", "Nome", "Limite de Crédito"};
+	private String[] colunas = {"ID", "Nome", "Limite de Crédito", "Fechamento Fatura"};
     private List<Cliente> clientes;
 
     public ClienteTableModel(List<Cliente> clientes) {
@@ -36,6 +37,10 @@ public class ClienteTableModel extends AbstractTableModel {
                 return cliente.getNome();
             case 2:
                 return cliente.getLimiteCompra();
+            case 3: 
+            	return cliente.getDiaFechamentoFatura() != null
+                    ? cliente.getDiaFechamentoFatura().format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))
+                    : "N/A"; // Dia Fechamento (formatado)
             default:
                 return null;
         }

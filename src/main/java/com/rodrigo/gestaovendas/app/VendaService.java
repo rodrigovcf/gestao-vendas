@@ -1,13 +1,8 @@
 package com.rodrigo.gestaovendas.app;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
@@ -17,8 +12,8 @@ import com.rodrigo.gestaovendas.domain.models.Produto;
 import com.rodrigo.gestaovendas.domain.models.Venda;
 import com.rodrigo.gestaovendas.domain.repositories.ClienteRepository;
 import com.rodrigo.gestaovendas.domain.repositories.ProdutoRepository;
+import com.rodrigo.gestaovendas.domain.repositories.VendaDTO;
 import com.rodrigo.gestaovendas.domain.repositories.VendaRepository;
-import com.rodrigo.gestaovendas.infra.ConexaoBD;
 import com.rodrigo.gestaovendas.utils.ValidacaoUtil;
 
 public class VendaService {
@@ -32,14 +27,15 @@ public class VendaService {
         this.produtoRepository = produtoRepository;
     }
 
-    public void registrarVenda(int clienteId, Map<Integer, Integer> produtosQuantidade) {
+    public Venda registrarVenda(int clienteId, Map<Integer, Integer> produtosQuantidade) {
         Cliente cliente = clienteRepository.consultar(clienteId);
         if (cliente == null) {
             throw new IllegalArgumentException("Cliente não encontrado.");
         }
 
-        double totalVenda = 0;
+        // Lógica de registro, cálculo de itens e valor total (conforme já implementado)
         List<ItemVenda> itensVenda = new ArrayList<>();
+        double valorTotal = 0.0;
 
         for (Map.Entry<Integer, Integer> entry : produtosQuantidade.entrySet()) {
             Produto produto = produtoRepository.consultar(entry.getKey());
@@ -47,43 +43,20 @@ public class VendaService {
                 throw new IllegalArgumentException("Produto não encontrado.");
             }
 
-            ItemVenda item = ItemVenda.builder()
-            		.codigoProduto(produto.getCodigo())
-                    .produto(produto)
-                    .quantidade(entry.getValue())
-                    .build();
+            int quantidade = entry.getValue();
+            double precoUnitario = produto.getPreco();
+            valorTotal += quantidade * precoUnitario;
 
-            itensVenda.add(item);
-            totalVenda += produto.getPreco() * entry.getValue();
+            itensVenda.add(new ItemVenda(0, 0, produto, quantidade, precoUnitario));
         }
 
-        if (totalVenda > cliente.getLimiteCompra()) {
-            throw new IllegalStateException("Limite de crédito excedido. Disponível: " + cliente.getLimiteCompra());
-        }
+        Venda novaVenda = new Venda(0, clienteId, cliente, itensVenda, LocalDate.now(), valorTotal);
+        int codigoVenda = vendaRepository.incluir(novaVenda); // Registra a venda no banco
+        novaVenda.setCodigo(codigoVenda); // Atualiza o ID da venda
 
-        Venda venda = Venda.builder()
-                .cliente(cliente)
-                .itens(itensVenda)
-                .valorTotal(totalVenda)
-                .data(LocalDate.now())
-                .build();
-
-        // Chamada para salvar a venda
-        int codigoVenda = vendaRepository.incluir(venda); // Salva a venda e obtém o código gerado
-
-        // Atualizar os itens com o código da venda
-        for (ItemVenda item : itensVenda) {
-            item.setCodigoVenda(codigoVenda); // Associa o código da venda ao item
-        }
-
-        // Chamada para salvar os itens da venda
-        vendaRepository.salvarItensVenda(itensVenda); // Deve salvar os itens na tabela `venda_produto`
-        
-     // Atualizar o limite de compra do cliente
-        double novoLimite = cliente.getLimiteCompra() - totalVenda;
-        clienteRepository.atualizarLimiteCompra(clienteId, novoLimite);
-
+        return novaVenda; // Retorna a venda criada
     }
+
     
     public void verificarLimiteCredito(int clienteId, double valorCompraAtual) {
         Cliente cliente = clienteRepository.consultar(clienteId);
@@ -91,76 +64,66 @@ public class VendaService {
             throw new IllegalArgumentException("Cliente não encontrado.");
         }
 
-        LocalDate dataAtual = LocalDate.now();
         LocalDate diaFechamentoFatura = cliente.getDiaFechamentoFatura();
+        if (diaFechamentoFatura == null) {
+            throw new IllegalStateException("Dia de fechamento de fatura não configurado para o cliente.");
+        }
 
-        // Determina a data do último fechamento
+        LocalDate dataAtual = LocalDate.now();
         LocalDate dataUltimoFechamento = diaFechamentoFatura.withYear(dataAtual.getYear()).withMonth(dataAtual.getMonthValue());
         if (dataUltimoFechamento.isAfter(dataAtual)) {
             dataUltimoFechamento = dataUltimoFechamento.minusMonths(1);
         }
 
+        System.out.println("Data atual: " + dataAtual);
+        System.out.println("Data do último fechamento: " + dataUltimoFechamento);
+
         // Obtém as vendas realizadas após o fechamento
         List<Venda> vendasAposFechamento = vendaRepository.buscarPorPeriodo(
                 java.sql.Date.valueOf(dataUltimoFechamento),
-                java.sql.Date.valueOf(dataAtual));
+                java.sql.Date.valueOf(dataAtual),
+                clienteId);
 
         if (vendasAposFechamento == null) {
             vendasAposFechamento = new ArrayList<>();
         }
 
+        System.out.println("Vendas após fechamento: " + vendasAposFechamento);
+
         // Calcula o total das compras realizadas após o fechamento
         double totalVendas = ValidacaoUtil.calcularComprasAposFechamento(vendasAposFechamento);
 
-        // Verifica se o limite será excedido
-        if (ValidacaoUtil.verificarSeLimiteExcedido(cliente.getLimiteCompra(), totalVendas, valorCompraAtual)) {
-            // Calcula a data do próximo fechamento
+        System.out.println("Total de vendas após fechamento: " + totalVendas);
+        System.out.println("Valor da compra atual: " + valorCompraAtual);
+        System.out.println("Limite do cliente: " + cliente.getLimiteCompra());
+
+        double limiteDisponivel = cliente.getLimiteCompra() - totalVendas;
+
+        System.out.printf("Limite disponível: %.2f, Total vendas: %.2f, Compra atual: %.2f%n",
+                limiteDisponivel, totalVendas, valorCompraAtual);
+
+        // Valida se o limite será excedido
+        if (limiteDisponivel < valorCompraAtual) {
             LocalDate proximoFechamento = ValidacaoUtil.calcularProximoFechamento(diaFechamentoFatura);
 
-            // Lança exceção com a mensagem apropriada
             throw new IllegalStateException(
                     String.format("Limite excedido! Valor disponível: %.2f\nPróximo fechamento: %s",
-                            ValidacaoUtil.calcularValorDisponivel(cliente.getLimiteCompra(), totalVendas),
+                            limiteDisponivel,
                             proximoFechamento.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))));
         }
 
-        // Caso o limite não seja excedido, exibe mensagem no console (opcional)
-        System.out.println("Compra aprovada! Limite restante: R$ " +
-                ValidacaoUtil.calcularValorDisponivel(cliente.getLimiteCompra(), totalVendas + valorCompraAtual));
+        System.out.println("Compra aprovada! Limite restante: R$ " + (limiteDisponivel - valorCompraAtual));
+
     }
-
-
-
 
 
     public List<Venda> buscarVendasPorCliente(int clienteId) {
         return vendaRepository.buscarPorCliente(clienteId);
     }
 
-    public List<Venda> buscarPorPeriodo(Date inicio, Date fim) {
-        String sql = "SELECT * FROM venda WHERE data_venda BETWEEN ? AND ?";
-        List<Venda> vendas = new ArrayList<>(); // Inicializa a lista vazia para evitar null
-        try (Connection conexao = ConexaoBD.conectar();
-             PreparedStatement stmt = conexao.prepareStatement(sql)) {
-
-            stmt.setDate(1, new java.sql.Date(inicio.getTime()));
-            stmt.setDate(2, new java.sql.Date(fim.getTime()));
-
-            try (ResultSet rs = stmt.executeQuery()) {
-                while (rs.next()) {
-                    Venda venda = new Venda();
-                    venda.setCodigo(rs.getInt("codigo"));
-                    venda.setValorTotal(rs.getDouble("valor_total"));
-                    venda.setData(rs.getDate("data_venda").toLocalDate()); // Converte para LocalDate
-                    vendas.add(venda);
-                }
-            }
-        } catch (SQLException e) {
-            throw new RuntimeException("Erro ao buscar vendas por período: " + e.getMessage(), e);
-        }
-        return vendas; // Garante que retorna uma lista vazia, mesmo que nenhuma venda seja encontrada
-    }
-
+//    public List<Venda> buscarPorPeriodo(Date inicio, Date fim) {
+//        return vendaRepository.buscarPorPeriodo(inicio, fim); // Chamada ao repositório
+//    }
 
     public void alterar(Venda venda) {
         if (venda == null || venda.getCodigo() <= 0) {
@@ -169,35 +132,21 @@ public class VendaService {
 
         vendaRepository.alterar(venda); 
     }
+    
+    public List<Venda> buscarTodasVendas() {
+        // Consulta todas as vendas no repositório
+        return vendaRepository.listarTodos();
+    }
 
 
+    public Venda buscarVendaPorId(int idVenda) {
+        Venda venda = vendaRepository.buscarVendaPorId(idVenda);
+        if (venda == null) {
+            throw new IllegalArgumentException("Venda não encontrada para o ID: " + idVenda);
+        }
+        return venda;
+    }
 
-	public List<Venda> listarTodos() {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	public Venda consultar(int codigoVenda) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	public void excluir(int codigoVenda) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	public List<Venda> buscarPorFiltros(String cliente, String produto, LocalDate inicio, LocalDate fim) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	public void incluir(Venda venda) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	
 
 }
 

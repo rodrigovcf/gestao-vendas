@@ -14,11 +14,18 @@ public class ValidacaoUtil {
      * @param vendas Lista de vendas do cliente após o fechamento.
      * @return O total das compras realizadas após o fechamento.
      */
-    public static double calcularComprasAposFechamento(List<Venda> vendas) {
-        return vendas.stream()
-                .mapToDouble(Venda::getValorTotal)
-                .sum();
-    }
+	public static double calcularComprasAposFechamento(List<Venda> vendas) {
+	    System.out.println("Calculando compras após fechamento...");
+	    double total = vendas.stream()
+	            .mapToDouble(venda -> {
+	                System.out.println("Venda ID: " + venda.getCodigo() + ", Total: " + venda.getValorTotal());
+	                return venda.getValorTotal();
+	            })
+	            .sum();
+	    System.out.println("Total calculado: " + total);
+	    return total;
+	}
+
 
     /**
      * Calcula a data do próximo fechamento com base no dia de fechamento.
@@ -26,15 +33,14 @@ public class ValidacaoUtil {
      * @param diaFechamentoFatura A data de fechamento da fatura.
      * @return A data do próximo fechamento.
      */
-    public static LocalDate calcularProximoFechamento(LocalDate diaFechamentoFatura) {
-        LocalDate dataAtual = LocalDate.now();
-        LocalDate proximoFechamento = diaFechamentoFatura.withYear(dataAtual.getYear()).withMonth(dataAtual.getMonthValue());
-        if (proximoFechamento.isBefore(dataAtual) || proximoFechamento.isEqual(dataAtual)) {
-            // Próximo fechamento será no mês seguinte
-            proximoFechamento = proximoFechamento.plusMonths(1);
-        }
-        return proximoFechamento;
-    }
+	public static LocalDate calcularProximoFechamento(LocalDate diaFechamentoFatura) {
+	    LocalDate dataAtual = LocalDate.now();
+	    LocalDate proximoFechamento = diaFechamentoFatura.withYear(dataAtual.getYear()).withMonth(dataAtual.getMonthValue());
+	    if (proximoFechamento.isBefore(dataAtual) || proximoFechamento.isEqual(dataAtual)) {
+	        proximoFechamento = proximoFechamento.plusMonths(1); // Próximo fechamento será no mês seguinte
+	    }
+	    return proximoFechamento;
+	}
 
     /**
      * Verifica se o limite de crédito será excedido.
@@ -44,9 +50,9 @@ public class ValidacaoUtil {
      * @param valorCompraAtual Valor da compra que está sendo realizada.
      * @return true se o limite será excedido, false caso contrário.
      */
-    public static boolean verificarSeLimiteExcedido(double limiteCredito, double totalVendas, double valorCompraAtual) {
-        return (totalVendas + valorCompraAtual) > limiteCredito;
-    }
+	public static boolean verificarSeLimiteExcedido(double limiteCredito, double totalVendas, double valorCompraAtual) {
+	    return (totalVendas + valorCompraAtual) > limiteCredito; // Permite uso até o limite
+	}
 
     /**
      * Calcula o valor disponível no limite.
@@ -55,9 +61,9 @@ public class ValidacaoUtil {
      * @param totalVendas Total das compras após o fechamento.
      * @return O valor disponível no limite de crédito.
      */
-    public static double calcularValorDisponivel(double limiteCredito, double totalVendas) {
-        return limiteCredito - totalVendas;
-    }
+	public static double calcularValorDisponivel(double limiteCredito, double totalVendas) {
+	    return limiteCredito - totalVendas;
+	}
     
     
     /**

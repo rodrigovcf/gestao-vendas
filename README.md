@@ -1,6 +1,6 @@
 # Sistema de Gestão de Vendas
 
-Bem-vindo ao **Sistema de Gestão de Vendas**, uma aplicação desenvolvida para gerenciar **Clientes**, **Produtos** e **Vendas** com eficiência. O projeto inclui funcionalidades de **cadastro**, **consulta** e **controle** de entidades-chave, bem como uma validação robusta de limite de crédito para vendas.
+Bem-vindo ao **Sistema de Gestão de Vendas**, uma aplicação desenvolvida para gerenciar **Clientes**, **Produtos** e **Vendas**. O projeto inclui funcionalidades de **cadastro**, **consulta** e **controle** de entidades-chave, bem como uma validação de limite de crédito para vendas.
 
 ## 🛠️ Tecnologias Utilizadas
 
@@ -151,4 +151,4 @@ CREATE TABLE venda_produto (
 
 ## 🌟 Contato
 
-Desenvolvido por **Rodrigão**. 
+Desenvolvido por **Rodrigo Valença**. 

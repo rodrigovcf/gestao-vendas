@@ -30,10 +30,10 @@ public class VendaForm extends JFrame {
     private JTextField txtFiltroProduto;
     private JTextField txtFiltroDataInicio;
     private JTextField txtFiltroDataFim;
-    private JButton btnIncluir, btnExcluir, btnAlterar, btnConsultar, btnVisualizarPorCliente, btnVisualizarPorProduto, btnFiltrar;
+    private JButton btnIncluir, btnExcluir, btnAlterar, btnConsultar, btnVisualizarPorCliente, btnVisualizarPorProduto, btnFiltrar, btnSair;
     private VendaRepository vendaRepository;
     
-    private void configurarJanela() {
+    private void initUI() {
     	setTitle("Gerenciamento de Vendas");
         setSize(800, 600);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -43,7 +43,7 @@ public class VendaForm extends JFrame {
     
     public VendaForm() {
 
-        configurarJanela();
+        initUI();
         vendaRepository = new VendaDAO();
         inicializarComponentes();
 
@@ -51,13 +51,6 @@ public class VendaForm extends JFrame {
         carregarDadosTabela();
     }
 
-//    public VendaForm() {
-//    	configurarJanela();
-//    	inicializarComponentes();
-//    	carregarDadosTabela();
-//    }
-    
-    
 
     private void inicializarComponentes() {
         // Configurar layout principal
@@ -67,11 +60,12 @@ public class VendaForm extends JFrame {
         JPanel painelBotoes = new JPanel(new FlowLayout(FlowLayout.LEFT));
         btnIncluir = new JButton("Incluir");
         btnExcluir = new JButton("Excluir");
-        btnAlterar = new JButton("Alterar");
+        btnAlterar = new JButton("Alterar");        
         btnConsultar = new JButton("Consultar");
         btnVisualizarPorCliente = new JButton("Por Cliente");
         btnVisualizarPorProduto = new JButton("Por Produto");
         btnFiltrar = new JButton("Filtrar");
+        btnSair = new JButton("Sair");
         painelBotoes.add(btnIncluir);
         painelBotoes.add(btnExcluir);
         painelBotoes.add(btnAlterar);
@@ -79,6 +73,7 @@ public class VendaForm extends JFrame {
         painelBotoes.add(btnVisualizarPorCliente);
         painelBotoes.add(btnVisualizarPorProduto);
         painelBotoes.add(btnFiltrar);
+        painelBotoes.add(btnSair);
 
         // Tabela para exibir vendas
         String[] colunas = {"ID", "Cliente", "Produto", "Quantidade", "Data", "Total"};
@@ -136,9 +131,16 @@ public class VendaForm extends JFrame {
 
         // Evento para filtrar vendas
         btnFiltrar.addActionListener(e -> filtrarVendas());
+        
+        // Evendo para sair da tela
+        btnSair.addActionListener(e -> sairDaVenda());
     }
 
-    // Método para incluir venda (apenas um exemplo básico)
+    private void sairDaVenda() {
+		dispose();		
+	}
+
+	// Método para incluir venda (apenas um exemplo básico)
     private void incluirVenda() {
         new VendaCadastroView();
     }
@@ -231,8 +233,7 @@ public class VendaForm extends JFrame {
 
         List<VendaDTO> vendasFiltradas = vendaRepository.filtrarDados(cliente, produto, dataInicio, dataFim);
 
-        DefaultTableModel modeloTabela = (DefaultTableModel) tabelaVendas.getModel();
-        modeloTabela.setRowCount(0); // Limpa os dados da tabela
+        modeloTabela.setRowCount(0); // Limpa a tabela
 
         for (VendaDTO venda : vendasFiltradas) {
             modeloTabela.addRow(new Object[]{
