@@ -21,9 +21,7 @@ import com.rodrigo.gestaovendas.app.ProdutoService;
 import com.rodrigo.gestaovendas.app.VendaService;
 import com.rodrigo.gestaovendas.ui.cliente.ClienteForm;
 import com.rodrigo.gestaovendas.ui.produto.ProdutoForm;
-import com.rodrigo.gestaovendas.ui.venda.VendaCadastroView;
 import com.rodrigo.gestaovendas.ui.venda.VendaForm;
-import com.rodrigo.gestaovendas.utils.VendaCadastroViewBKP_CODE;
 
 public class MenuPrincipal extends JFrame {
 
@@ -50,8 +48,7 @@ public class MenuPrincipal extends JFrame {
         headerPanel.add(headerLabel, BorderLayout.CENTER);
 
 
-        JButton logoutButton = new JButton(new ImageIcon(getClass().getClassLoader().getResource("images/sair-1.png"))
-);
+        JButton logoutButton = new JButton(new ImageIcon(getClass().getClassLoader().getResource("images/sair-1.png")));
         logoutButton.setContentAreaFilled(false);
         logoutButton.setBorderPainted(false);
         headerPanel.add(logoutButton, BorderLayout.EAST);
