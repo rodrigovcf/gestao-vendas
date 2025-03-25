@@ -12,7 +12,6 @@ import com.rodrigo.gestaovendas.domain.models.Produto;
 import com.rodrigo.gestaovendas.domain.models.Venda;
 import com.rodrigo.gestaovendas.domain.repositories.ClienteRepository;
 import com.rodrigo.gestaovendas.domain.repositories.ProdutoRepository;
-import com.rodrigo.gestaovendas.domain.repositories.VendaDTO;
 import com.rodrigo.gestaovendas.domain.repositories.VendaRepository;
 import com.rodrigo.gestaovendas.utils.ValidacaoUtil;
 
@@ -33,9 +32,8 @@ public class VendaService {
             throw new IllegalArgumentException("Cliente não encontrado.");
         }
 
-        // Lógica de registro, cálculo de itens e valor total (conforme já implementado)
+        double totalVenda = 0;
         List<ItemVenda> itensVenda = new ArrayList<>();
-        double valorTotal = 0.0;
 
         for (Map.Entry<Integer, Integer> entry : produtosQuantidade.entrySet()) {
             Produto produto = produtoRepository.consultar(entry.getKey());
@@ -43,19 +41,38 @@ public class VendaService {
                 throw new IllegalArgumentException("Produto não encontrado.");
             }
 
-            int quantidade = entry.getValue();
-            double precoUnitario = produto.getPreco();
-            valorTotal += quantidade * precoUnitario;
-
-            itensVenda.add(new ItemVenda(0, 0, produto, quantidade, precoUnitario));
+            ItemVenda item = new ItemVenda();
+            item.setCodigoProduto(produto.getCodigo());
+            item.setProduto(produto);
+            item.setQuantidade(entry.getValue());
+            item.setPrecoUnitario(produto.getPreco());
+            itensVenda.add(item);
+            totalVenda += produto.getPreco() * entry.getValue();
         }
 
-        Venda novaVenda = new Venda(0, clienteId, cliente, itensVenda, LocalDate.now(), valorTotal);
-        int codigoVenda = vendaRepository.incluir(novaVenda); // Registra a venda no banco
-        novaVenda.setCodigo(codigoVenda); // Atualiza o ID da venda
+        if (totalVenda > cliente.getLimiteCompra()) {
+            throw new IllegalStateException("Limite de crédito excedido.");
+        }
 
-        return novaVenda; // Retorna a venda criada
+        Venda novaVenda = new Venda();
+        novaVenda.setCliente(cliente);
+        novaVenda.setItens(itensVenda);
+        novaVenda.setValorTotal(totalVenda);
+        novaVenda.setData(LocalDate.now());
+
+        // Chama o repositório para salvar a venda e retorna o ID gerado
+        int idVendaGerado = vendaRepository.incluir(novaVenda);
+        novaVenda.setCodigo(idVendaGerado);
+
+        // Salvar os itens da venda no banco de dados
+        for (ItemVenda item : itensVenda) {
+            item.setCodigoVenda(idVendaGerado);
+        }
+        vendaRepository.salvarItensVenda(itensVenda);
+
+        return novaVenda; // Retorna a venda completa com ID e itens associados
     }
+
 
     
     public void verificarLimiteCredito(int clienteId, double valorCompraAtual) {
@@ -133,11 +150,7 @@ public class VendaService {
         vendaRepository.alterar(venda); 
     }
     
-    public List<Venda> buscarTodasVendas() {
-        // Consulta todas as vendas no repositório
-        return vendaRepository.listarTodos();
-    }
-
+    
 
     public Venda buscarVendaPorId(int idVenda) {
         Venda venda = vendaRepository.buscarVendaPorId(idVenda);

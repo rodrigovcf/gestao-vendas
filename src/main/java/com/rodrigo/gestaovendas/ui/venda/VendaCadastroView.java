@@ -34,6 +34,7 @@ import com.rodrigo.gestaovendas.domain.models.ItemVenda;
 import com.rodrigo.gestaovendas.domain.models.Produto;
 import com.rodrigo.gestaovendas.domain.models.Venda;
 import com.rodrigo.gestaovendas.domain.repositories.ClienteRepository;
+import com.rodrigo.gestaovendas.domain.repositories.VendaDTO;
 import com.rodrigo.gestaovendas.domain.repositories.VendaRepository;
 import com.rodrigo.gestaovendas.infra.ClienteDAO;
 import com.rodrigo.gestaovendas.infra.ProdutoDAO;
@@ -91,6 +92,8 @@ public class VendaCadastroView extends JFrame {
 
 	private ProdutoDAO produtoRepository;
 
+	private DefaultTableModel modeloTabela;
+
 	public VendaCadastroView(VendaRepository vendaRepository, Venda venda) {
 	    this.vendaRepository = vendaRepository;
 	    this.venda = venda;
@@ -126,12 +129,12 @@ public class VendaCadastroView extends JFrame {
             txtNomeCliente.setText("Cliente não encontrado");
         }
 
-        DefaultTableModel modelo = (DefaultTableModel) tabelaCarrinho.getModel();
-        modelo.setRowCount(0); // Limpa os dados existentes
+        modeloTabela = (DefaultTableModel) tabelaCarrinho.getModel();
+        modeloTabela.setRowCount(0); // Limpa os dados existentes
 
         for (ItemVenda item : venda.getItens()) {
             if (item.getProduto() != null) {
-                modelo.addRow(new Object[]{
+                modeloTabela.addRow(new Object[]{
                     item.getCodigoProduto(),
                     item.getProduto().getDescricao(),
                     item.getQuantidade(),
@@ -140,7 +143,7 @@ public class VendaCadastroView extends JFrame {
                 });
             } else {
                 System.err.println("Produto não encontrado para o código: " + item.getCodigoProduto());
-                modelo.addRow(new Object[]{
+                modeloTabela.addRow(new Object[]{
                     item.getCodigoProduto(),
                     "Produto não encontrado",
                     item.getQuantidade(),
@@ -465,7 +468,7 @@ public class VendaCadastroView extends JFrame {
     	                    "Venda cadastrada com sucesso!",
     	                    "Sucesso",
     	                    JOptionPane.INFORMATION_MESSAGE);
-    	            //atualizarTabela();
+    	            atualizarTabela();
     	        }
 
     	        limparCamposVenda(); // Limpa os campos após salvar
@@ -641,7 +644,7 @@ public class VendaCadastroView extends JFrame {
 
           if (confirmacao == JOptionPane.YES_OPTION) {
               try {
-                  DefaultTableModel modeloTabela = (DefaultTableModel) tabelaCarrinho.getModel();
+                  modeloTabela = (DefaultTableModel) tabelaCarrinho.getModel();
                   modeloTabela.removeRow(linhaSelecionada); // Remove a linha do produto selecionado
 
                   // Recalcula e atualiza o total da venda
@@ -668,21 +671,23 @@ public class VendaCadastroView extends JFrame {
     }
     
     private void atualizarTabela() {
-        DefaultTableModel modelo = (DefaultTableModel) tabelaCarrinho.getModel();
-        modelo.setRowCount(0); // Limpa os dados existentes
+        modeloTabela.setRowCount(0); // Limpa os dados existentes na tabela
 
-        List<Venda> vendasAtualizadas = vendaService.buscarTodasVendas(); // Recupera todas as vendas
+        List<VendaDTO> vendas = vendaRepository.carregarDadosVendas(); // Busca todas as vendas
 
-        for (Venda venda : vendasAtualizadas) {
-            modelo.addRow(new Object[]{
-                venda.getCodigo(), // Código da venda
-                venda.getCliente().getNome(), // Nome do cliente
-                venda.getItens().size(), // Número de itens na venda
-                venda.getValorTotal() // Valor total da venda
+        for (VendaDTO venda : vendas) {
+            modeloTabela.addRow(new Object[]{
+                venda.getId(),
+                venda.getCliente(),
+                venda.getProduto(),
+                venda.getQuantidade(),
+                venda.getData(),
+                String.format("%.2f", venda.getTotal())
             });
         }
+        
+        JOptionPane.showMessageDialog(null, "atualizarTabela foi chamado!");
     }
-
 
 	private List<ItemVenda> convertToItensVenda(Map<Integer, Integer> produtosQuantidade) {
     List<ItemVenda> itensVenda = new ArrayList<>();
@@ -777,7 +782,7 @@ public class VendaCadastroView extends JFrame {
         double totalVenda = 0.0;
 
         // Percorre a tabela e soma os subtotais de todos os produtos
-        DefaultTableModel modeloTabela = (DefaultTableModel) tabelaCarrinho.getModel();
+        modeloTabela = (DefaultTableModel) tabelaCarrinho.getModel();
         for (int i = 0; i < modeloTabela.getRowCount(); i++) {
             double subtotal = Double.parseDouble(modeloTabela.getValueAt(i, 4).toString());
             totalVenda += subtotal;
